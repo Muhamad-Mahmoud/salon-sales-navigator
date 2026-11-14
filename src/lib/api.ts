@@ -88,10 +88,40 @@ function mapLogRecord(rec: any): ContactLog {
   };
 }
 
-// Setup global 401 handler
+// Single-flight background refresh promise to prevent concurrent refreshes
+let refreshPromise: Promise<any> | null = null;
+
+// Helper to decode JWT payload safely without extra dependencies
+function decodeJwtPayload(token: string): { exp?: number } | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const part1 = parts[1] || "";
+    const base64 = part1.replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+// Global afterSend handler: only handle true authentication failures
 pb.afterSend = (response, data) => {
   if (response.status === 401) {
-    pb.authStore.clear();
+    // Only clear if a request failed with 401 while we had a token
+    // And redirect to login cleanly instead of silently leaving the user on a blank page
+    if (pb.authStore.token) {
+      console.warn("[Auth] 401 received from server; session is invalid.");
+      pb.authStore.clear();
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login";
+      }
+    }
   }
   return data;
 };
@@ -447,6 +477,14 @@ export const api = {
   auth: {
     async login(email: string, password: string): Promise<AppUser> {
       const authData = await pb.collection("users").authWithPassword(email.trim(), password);
+      if (typeof document !== "undefined") {
+        document.cookie = pb.authStore.exportToCookie({
+          httpOnly: false,
+          sameSite: "Lax",
+          secure: window.location.protocol === "https:",
+          path: "/",
+        });
+      }
       const user = authData.record as any;
       return {
         id: user["id"],
@@ -461,22 +499,47 @@ export const api = {
     },
 
     async currentUser(): Promise<AppUser | null> {
+      // 1. If not valid in store, try loading from cookie fallback
+      if (!pb.authStore.isValid && typeof document !== "undefined" && document.cookie.includes("pb_auth")) {
+        pb.authStore.loadFromCookie(document.cookie);
+      }
+
       if (!pb.authStore.isValid || !pb.authStore.model) {
         return null;
       }
-      try {
-        const authData = await pb.collection("users").authRefresh();
-        const model = authData.record as any;
-        return {
-          id: model["id"],
-          name: model["name"] || model["email"],
-          email: model["email"],
-          role: model["role"] || "agent",
-        };
-      } catch {
-        pb.authStore.clear();
-        return null;
+
+      const model = pb.authStore.model as any;
+      const user: AppUser = {
+        id: model["id"],
+        name: model["name"] || model["email"],
+        email: model["email"],
+        role: model["role"] || "agent",
+      };
+
+      // 2. Synchronous & instant: NEVER block page navigation on a network roundtrip!
+      // Only trigger a background refresh if token is nearing expiration (less than 48 hours remaining).
+      const payload = pb.authStore.token ? decodeJwtPayload(pb.authStore.token) : null;
+      const exp = payload?.exp ? payload.exp * 1000 : 0;
+      const now = Date.now();
+      const hoursRemaining = exp > 0 ? (exp - now) / (1000 * 60 * 60) : 999;
+
+      if (hoursRemaining < 48 && !refreshPromise) {
+        // Run refresh in background — NEVER clear authStore on network errors!
+        refreshPromise = pb
+          .collection("users")
+          .authRefresh()
+          .catch((err: any) => {
+            // Only clear if the server explicitly rejected the credentials (401/403)
+            if (err?.status === 401 || err?.status === 403) {
+              pb.authStore.clear();
+            }
+          })
+          .finally(() => {
+            refreshPromise = null;
+          });
       }
+
+      return user;
     },
 
     async listUsers(): Promise<AppUser[]> {
