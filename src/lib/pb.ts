@@ -11,6 +11,9 @@ const pbUrl =
 
 export const pb = new PocketBase(pbUrl);
 
+// Disable auto-cancellation globally so concurrent queries (e.g. table + badges + dialogs) never cancel each other
+pb.autoCancellation(false);
+
 // Dual-persistence: localStorage + cookie
 if (typeof document !== "undefined") {
   // If localStorage is empty/invalid but cookie has valid auth, restore it

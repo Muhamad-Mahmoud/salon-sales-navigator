@@ -222,7 +222,7 @@ export const api = {
         sort = `${dir}${key}`;
       }
 
-      const options: Record<string, any> = { sort, expand: "owner" };
+      const options: Record<string, any> = { sort, expand: "owner", requestKey: null };
       if (filterParts.length > 0) {
         options["filter"] = pb.filter(filterParts.join(" && "), filterParams);
       }
@@ -317,6 +317,7 @@ export const api = {
       const records = await pb.collection("clients").getFullList({
         sort: "-created",
         expand: "owner",
+        requestKey: null,
       });
       return records.map((r) => mapClientRecord(r));
     },
@@ -543,7 +544,7 @@ export const api = {
     },
 
     async listUsers(): Promise<AppUser[]> {
-      const records = await pb.collection("users").getFullList({ sort: "name" });
+      const records = await pb.collection("users").getFullList({ sort: "name", requestKey: null });
       return records.map((r: any) => ({
         id: r["id"],
         name: r["name"] || r["email"],
@@ -555,7 +556,7 @@ export const api = {
 
   users: {
     async list(): Promise<AppUser[]> {
-      const records = await pb.collection("users").getFullList({ sort: "name" });
+      const records = await pb.collection("users").getFullList({ sort: "name", requestKey: null });
       return records.map((r: any) => ({
         id: r["id"],
         name: r["name"] || r["email"],
