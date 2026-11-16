@@ -155,7 +155,13 @@ export function QuickSmsDialog({
         }
       }
 
-      toast.success(resData.note || "تم إرسال الرسالة النصية بنجاح إلى العميل ✅");
+      if (resData.status === "sent") {
+        toast.success("تم إرسال الرسالة النصية بنجاح إلى العميل ✅");
+      } else if (resData.status === "waiting_gateway" || resData.status === "queued") {
+        toast.info("تم حفظ الرسالة في قائمة الانتظار - بانتظار اتصال جهاز الشرائح ⏳");
+      } else {
+        toast.success(resData.note || "تم استلام الرسالة وجدولتها بنجاح ✅");
+      }
       onOpenChange(false);
       onSuccess?.();
     } catch (err: any) {
