@@ -144,7 +144,7 @@ export function ClientSheet({
           </a>
 
           <a
-            href={`https://webrtc.ojlinker.com.sa/?dial=${encodeURIComponent(client.phone)}`}
+            href={`https://ojcalls.ojlinker.com.sa/?dial=${encodeURIComponent(client.phone)}`}
             target="_blank"
             rel="noreferrer"
             className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-blue-500/30 bg-blue-500/10 px-3 text-xs font-medium text-blue-600 shadow-xs transition-colors hover:bg-blue-500/20"

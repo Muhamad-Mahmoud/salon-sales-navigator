@@ -15,7 +15,6 @@ import {
   Lock,
   Mail,
   Plus,
-  Server,
   Shield,
   Trash2,
   User,
@@ -468,37 +467,6 @@ function SettingsPage() {
           </CardContent>
         </Card>
       )}
-
-      {/* System Information */}
-      <Card className="rounded-3xl border-border shadow-xs">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-bold flex items-center gap-2">
-            <Server className="size-4 text-muted-foreground" />
-            معلومات الخادم والبيئة
-          </CardTitle>
-          <CardDescription className="text-xs">
-            تفاصيل الربط التقني لقاعدة البيانات والخادم
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-1">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 text-xs">
-            <div className="rounded-xl border border-border bg-card p-3">
-              <span className="text-muted-foreground">محرك قاعدة البيانات</span>
-              <p className="mt-1 font-bold text-foreground">PocketBase (SQLite Embedded)</p>
-            </div>
-
-            <div className="rounded-xl border border-border bg-card p-3">
-              <span className="text-muted-foreground">المنطقة الزمنية المعتمدة</span>
-              <p className="mt-1 font-bold text-foreground">توقيت الرياض (Asia/Riyadh - UTC+3)</p>
-            </div>
-
-            <div className="rounded-xl border border-border bg-card p-3">
-              <span className="text-muted-foreground">بيئة التشغيل</span>
-              <p className="mt-1 font-bold text-foreground">Linux VPS (systemd + HTTPS)</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* User Form Dialog (Add / Edit / Delete) */}
       <UserFormDialog

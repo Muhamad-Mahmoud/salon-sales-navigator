@@ -63,7 +63,9 @@ const SMS_TEMPLATES = [
   },
 ];
 
-const VOIP_GATEWAY_URL = "https://webrtc.ojlinker.com.sa/api/sms/send";
+const VOIP_GATEWAY_URL =
+  (import.meta.env["VITE_VOIP_GATEWAY_URL"] as string | undefined) ||
+  "https://ojcalls.ojlinker.com.sa/api/sms/send";
 const VOIP_INTERNAL_API_KEY = "OjLinker_Internal_Voip_API_2026_e7d8f9a2b1c4";
 
 export function QuickSmsDialog({
@@ -258,3 +260,4 @@ export function QuickSmsDialog({
     </Dialog>
   );
 }
+

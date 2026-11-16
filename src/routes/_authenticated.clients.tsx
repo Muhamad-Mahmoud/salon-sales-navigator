@@ -532,7 +532,7 @@ function ClientsPage() {
                         </a>
 
                         <a
-                          href={`https://webrtc.ojlinker.com.sa/?dial=${encodeURIComponent(client.phone)}`}
+                          href={`https://ojcalls.ojlinker.com.sa/?dial=${encodeURIComponent(client.phone)}`}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex size-8 items-center justify-center rounded-lg text-blue-600 transition-colors hover:bg-blue-500/10"
