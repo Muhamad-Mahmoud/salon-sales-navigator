@@ -30,36 +30,53 @@ interface QuickSmsDialogProps {
   onSuccess?: () => void;
 }
 
+function cleanClientName(rawName?: string): string {
+  if (!rawName) return "عزيزنا العميل";
+  const trimmed = rawName.trim();
+  return trimmed || "عزيزنا العميل";
+}
+
 const SMS_TEMPLATES = [
   {
     id: "demo",
-    title: "عرض تجريبي مجاني (Demo)",
+    title: "✨ تجربة مجانية لنظام الصالون (Demo)",
     text: (name: string) =>
-      `مرحباً ${name}، يسعدنا في أوج لينكر تقديم تجربة مجانية لنظام إدارة الصالونات وحجوزات العملاء. لمعرفة المزيد وتفعيل التجربة: https://ojlinker.com.sa`,
+      `أهلاً ${cleanClientName(name)}، يسعدنا في أوج لينكر تقديم تجربة مجانية لنظام إدارة حجوزات الصالونات والكاشير والفاتورة المعتمدة. لبدء تجربتكم: https://ojlinker.com.sa`,
   },
   {
-    id: "reminder",
-    title: "تذكير بموعد العرض التجريبي",
+    id: "missed_call",
+    title: "📞 محاولة اتصال لم يُرد عليها",
     text: (name: string) =>
-      `مرحباً ${name}، نود تذكيركم بموعد العرض التجريبي لمنظومة أوج لينكر لإدارة الصالونات اليوم. نتطلع للتواصل معكم والرد على كافة استفساراتكم.`,
+      `مرحباً ${cleanClientName(name)}، حاولنا التواصل معكم من أوج لينكر بخصوص تنظيم حجوزات الصالون وزيادة المبيعات. نسعد بتواصلكم معنا أو تحديد موعد يناسبكم.`,
   },
   {
     id: "followup",
-    title: "متابعة بعد المكالمة",
+    title: "🤝 متابعة بعد المكالمة وتفعيل الحساب",
     text: (name: string) =>
-      `أهلاً ${name}، سعدنا بالتواصل معكم من أوج لينكر. يسعدنا تفعيل حسابكم التجريبي ومساعدتكم في زيادة الحجوزات عبر: https://app.ojlinker.com.sa`,
+      `عزيزنا ${cleanClientName(name)}، سعدنا بالتواصل معكم اليوم. يمكنكم الدخول لمنظومة أوج لينكر وتجربة النظام مجاناً ومتابعة المواعيد عبر: https://app.ojlinker.com.sa`,
   },
   {
     id: "offer",
-    title: "عرض خصم خاص للاشتراك",
+    title: "🎁 عرض خصم 20% على الاشتراك السنوي",
     text: (name: string) =>
-      `عرض خاص لـ ${name}! احصل على خصم 20% على الاشتراك السنوي في أوج لينكر لتنظيم المواعيد ومتابعة الأداء المالي للصالون. تواصل معنا للاستفادة.`,
+      `عرض خاص لـ ${cleanClientName(name)}! وفّر 20% على الاشتراك السنوي في أوج لينكر (تنظيم المواعيد، الفاتورة الإلكترونية، وتقارير الأرباح). العرض لفترة محدودة، تواصل معنا.`,
   },
   {
     id: "renewal",
-    title: "تذكير بتجديد الاشتراك",
+    title: "⏳ تذكير بتجديد الاشتراك وتفادي التوقف",
     text: (name: string) =>
-      `عزيزنا ${name}، نود تذكيركم بقرب انتهاء اشتراككم في أوج لينكر. للتجديد ومتابعة الحجوزات دون توقف: https://app.ojlinker.com.sa/billing`,
+      `عزيزنا ${cleanClientName(name)}، نود تذكيركم بقرب موعد تجديد اشتراككم في أوج لينكر لضمان استمرار الحجوزات ونقاط البيع دون توقف. للتجديد: https://app.ojlinker.com.sa/billing`,
+  },
+  {
+    id: "whatsapp",
+    title: "💬 دعوة للمحادثة المباشرة عبر واتساب",
+    text: (name: string) =>
+      `مرحباً ${cleanClientName(name)}، لتسهيل الرد على استفساراتكم وعرض مزايا نظام أوج لينكر لإدارة الصالونات، يسعدنا تواصلكم معنا عبر الواتساب مباشرة.`,
+  },
+  {
+    id: "custom",
+    title: "✍️ رسالة مخصصة (نص حر)",
+    text: () => "",
   },
 ];
 
@@ -81,23 +98,38 @@ export function QuickSmsDialog({
   const [isSending, setIsSending] = useState<boolean>(false);
 
   useEffect(() => {
-    if (client) {
+    if (client && open) {
       const tpl = SMS_TEMPLATES.find((t) => t.id === selectedTemplate);
-      if (tpl) {
-        setMessage(tpl.text(client.name || "العميل"));
+      if (tpl && selectedTemplate !== "custom") {
+        setMessage(tpl.text(client.name || ""));
       }
     }
-  }, [client, selectedTemplate]);
-
-  if (!client) return null;
+  }, [client, selectedTemplate, open]);
 
   const handleTemplateSelect = (val: string) => {
     setSelectedTemplate(val);
     const tpl = SMS_TEMPLATES.find((t) => t.id === val);
     if (tpl) {
-      setMessage(tpl.text(client.name || "العميل"));
+      if (val === "custom") {
+        setMessage("");
+      } else if (client) {
+        setMessage(tpl.text(client.name || ""));
+      }
     }
   };
+
+  const isArabic = /[\u0600-\u06FF]/.test(message);
+  const singleLimit = isArabic ? 70 : 160;
+  const concatLimit = isArabic ? 67 : 153;
+  const charCount = message.length;
+  const segmentCount =
+    charCount === 0
+      ? 0
+      : charCount <= singleLimit
+      ? 1
+      : Math.ceil(charCount / concatLimit);
+
+  if (!client) return null;
 
   const handleSend = async () => {
     if (!message.trim()) {
@@ -211,9 +243,27 @@ export function QuickSmsDialog({
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-semibold">نص الرسالة</Label>
-              <span className="text-[10px] text-muted-foreground font-mono">
-                {message.length} حرف
-              </span>
+              <div className="flex items-center gap-1.5 text-[11px] font-mono">
+                <span className={charCount > singleLimit ? "text-amber-500 font-semibold" : "text-muted-foreground"}>
+                  {charCount} حرف
+                </span>
+                {charCount > 0 && (
+                  <>
+                    <span className="text-muted-foreground">·</span>
+                    <span
+                      className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                        segmentCount <= 1
+                          ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+                          : segmentCount === 2
+                          ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                          : "bg-rose-500/10 text-rose-600 border border-rose-500/20"
+                      }`}
+                    >
+                      {segmentCount} {segmentCount === 1 ? "رسالة" : "رسائل"}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
             <Textarea
               value={message}
