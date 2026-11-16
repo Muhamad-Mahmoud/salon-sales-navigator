@@ -41,6 +41,7 @@ import { LogContactDialog } from "@/components/clients/log-contact-dialog";
 import { ClientFormDialog } from "@/components/clients/client-form-dialog";
 import { ImportExcelDialog } from "@/components/clients/import-excel-dialog";
 import { ClientSheet } from "@/components/clients/client-sheet";
+import { QuickSmsDialog } from "@/components/clients/quick-sms-dialog";
 import {
   BUSINESS_TYPES,
   CITIES,
@@ -103,6 +104,7 @@ function ClientsPage() {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [smsClient, setSmsClient] = useState<Client | null>(null);
 
   const { data, isLoading } = useClients({
     page,
@@ -529,6 +531,26 @@ function ClientsPage() {
                           <MessageSquare className="size-4" />
                         </a>
 
+                        <a
+                          href={`https://webrtc.ojlinker.com.sa/?dial=${encodeURIComponent(client.phone)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex size-8 items-center justify-center rounded-lg text-blue-600 transition-colors hover:bg-blue-500/10"
+                          title="اتصال هاتفي عبر البدالة السحابية"
+                        >
+                          <Phone className="size-4" />
+                        </a>
+
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-8 text-amber-600 hover:bg-amber-500/10 hover:text-amber-700"
+                          onClick={() => setSmsClient(client)}
+                          title="إرسال رسالة نصية SMS"
+                        >
+                          <MessageSquare className="size-4 rotate-180" />
+                        </Button>
+
                         <Button
                           size="icon"
                           variant="ghost"
@@ -629,7 +651,17 @@ function ClientsPage() {
           setSheetOpen(false);
           handleOpenLog(c);
         }}
+        onSms={(c) => {
+          setSheetOpen(false);
+          setSmsClient(c);
+        }}
         isAdmin={isAdmin}
+      />
+
+      <QuickSmsDialog
+        open={!!smsClient}
+        onOpenChange={(open) => !open && setSmsClient(null)}
+        client={smsClient}
       />
     </div>
   );

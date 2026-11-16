@@ -42,6 +42,7 @@ interface ClientSheetProps {
   client: Client | null;
   onEdit: (client: Client) => void;
   onLogContact: (client: Client) => void;
+  onSms?: (client: Client) => void;
   isAdmin?: boolean;
 }
 
@@ -51,6 +52,7 @@ export function ClientSheet({
   client,
   onEdit,
   onLogContact,
+  onSms,
   isAdmin = false,
 }: ClientSheetProps) {
   const deleteClient = useDeleteClient();
@@ -142,12 +144,25 @@ export function ClientSheet({
           </a>
 
           <a
-            href={`tel:${client.phone}`}
-            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-background px-3 text-xs font-medium text-foreground shadow-xs transition-colors hover:bg-muted"
+            href={`https://webrtc.ojlinker.com.sa/?dial=${encodeURIComponent(client.phone)}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-blue-500/30 bg-blue-500/10 px-3 text-xs font-medium text-blue-600 shadow-xs transition-colors hover:bg-blue-500/20"
+            title="اتصال عبر هاتف البدالة السحابية"
           >
             <Phone className="size-4" />
-            اتصال
+            اتصال هاتفي
           </a>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onSms?.(client)}
+            className="h-9 gap-1.5 rounded-xl border-amber-500/30 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20"
+          >
+            <MessageSquare className="size-4" />
+            إرسال SMS
+          </Button>
 
           <Button
             size="sm"
